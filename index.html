@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Definitive AI Architecture: A Self-Learning Ecosystem</title>
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --font-color: #4a4a4a;
+            --title-color: #2c3e50;
+            --border-color: #dee2e6;
+            --color-source: #0d6efd;
+            --color-bus: #6c757d;
+            --color-model: #198754;
+            --color-engine: #ffc107;
+            --color-hmi: #6f42c1;
+            --color-feedback: #fd7e14;
+            --color-training: #0dcaf0;
+            --color-arrow: #adb5bd;
+            --color-highlight: #d63384;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--font-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+        }
+
+        header, footer { text-align: center; margin: 1rem auto 2rem auto; max-width: 1200px; }
+        h1 { font-size: 2.8rem; color: var(--title-color); font-weight: 700; }
+        h2 { border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem; margin-top: 3rem; }
+
+        .legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 1.5rem; margin: 1rem 0 2rem 0; font-size: 0.9rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .legend-color { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.1); }
+
+        button#run-button {
+            padding: 0.8rem 1.8rem; font-size: 1rem; font-weight: 600; color: #fff; background: linear-gradient(145deg, #0d6efd, #0b5ed7);
+            border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+            margin-bottom: 2rem;
+        }
+        button#run-button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4); }
+        button#run-button:disabled { background: #adb5bd; cursor: not-allowed; box-shadow: none; transform: translateY(0); }
+
+        .architecture-container {
+            position: relative;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            padding-bottom: 120px; /* Space for MLOps pipeline */
+        }
+        .architecture-stages {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2rem;
+        }
+
+        .stage { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+        .stage-title {
+            font-size: 1.1rem; font-weight: 600; color: var(--title-color); padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color); width: 100%; text-align: center;
+            margin-bottom: 1rem; transition: color 0.4s ease-in-out;
+        }
+        .stage-title.highlight-flow { color: var(--color-highlight); border-bottom-color: var(--color-highlight); }
+
+        .component {
+            background-color: #fff; border: 1px solid var(--border-color); border-left-width: 5px; border-radius: 8px;
+            padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05); transition: all 0.3s ease;
+            position: relative; width: 100%;
+        }
+        .component:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08); }
+        .component.highlight-component {
+            transform: scale(1.05); box-shadow: 0 0 25px var(--color-highlight);
+            border-color: var(--color-highlight);
+        }
+        .component.highlight-component .component-header i { animation: pulse 1s infinite; }
+        
+        .component-header { display: flex; align-items: center; gap: 0.8rem; }
+        .component-header i { font-size: 1.5rem; transition: color 0.3s; }
+        .component-title { font-size: 1.1rem; font-weight: 600; color: var(--title-color); }
+        .component-desc { font-size: 0.9rem; color: #6c757d; line-height: 1.4; }
+        
+        .source { border-left-color: var(--color-source); } .source i { color: var(--color-source); }
+        .bus { border-left-color: var(--color-bus); } .bus i { color: var(--color-bus); }
+        .model { border-left-color: var(--color-model); } .model i { color: var(--color-model); }
+        .engine { border-left-color: var(--color-engine); } .engine i { color: var(--color-engine); }
+        .hmi { border-left-color: var(--color-hmi); } .hmi i { color: var(--color-hmi); }
+        .feedback { border-left-color: var(--color-feedback); } .feedback i { color: var(--color-feedback); }
+        .training { border-left-color: var(--color-training); } .training i { color: var(--color-training); }
+
+        #mlops-pipeline { position: absolute; bottom: 0; left: 10%; width: 80%; }
+        
+        #svg-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -10; }
+        .flow-path { stroke: var(--color-arrow); stroke-width: 2.5; fill: none; transition: stroke 0.4s ease-in-out; }
+        .flow-path.highlight-flow { stroke: var(--color-highlight); stroke-width: 4; }
+
+        .tooltip {
+            visibility: hidden; width: 280px; background-color: #333; color: #fff; text-align: left;
+            border-radius: 6px; padding: 10px 15px; position: absolute; z-index: 10;
+            bottom: 115%; left: 50%; margin-left: -140px; opacity: 0; transition: opacity 0.3s;
+        }
+        .tooltip strong { color: #f6c23e; }
+        .tooltip::after {
+            content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px;
+            border-style: solid; border-color: #333 transparent transparent transparent;
+        }
+        .component:hover .tooltip { visibility: visible; opacity: 1; }
+
+        .hmi-actions { display: none; margin-top: 1rem; gap: 0.5rem; }
+        .hmi-actions button {
+            flex: 1; padding: 8px 12px; font-size: 0.9rem; font-weight: 600; border-radius: 5px;
+            border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s ease;
+        }
+        .hmi-actions button:hover { transform: translateY(-2px); }
+        .hmi-accept { background-color: #e8f9f3; color: #198754; border-color: #198754; }
+        .hmi-override { background-color: #fff8e1; color: #fd7e14; border-color: #fd7e14; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Definitive AI Architecture: A Self-Learning Ecosystem</h1>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-source);"></div><span>Data Source</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-bus);"></div><span>Event Bus</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-model);"></div><span>Prediction Models</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-engine);"></div><span>Optimization Engine</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-hmi);"></div><span>HMI</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-feedback);"></div><span>Feedback Store</span></div>
+            <div class="legend-item"><div class="legend-color" style="background-color: var(--color-training);"></div><span>MLOps Pipeline</span></div>
+        </div>
+    </header>
+
+    <button id="run-button"><i class="fas fa-play"></i> Animate Workflow</button>
+
+    <div class="architecture-container">
+        <main class="architecture-stages">
+            <!-- Stage 1 -->
+            <div class="stage" id="stage-1">
+                <h3 class="stage-title">1. Data Ingestion</h3>
+                <div id="source1" class="component source"><div class="component-header"><i class="fas fa-database"></i><span class="component-title">Flight Schedules</span></div><div class="component-desc">The baseline operational plan.</div><span class="tooltip"><strong>Why:</strong> Provides the system with what is *planned* to happen. The foundation for all forward-looking predictions.</span></div>
+                <div id="source2" class="component source"><div class="component-header"><i class="fas fa-satellite-dish"></i><span class="component-title">Live Sensor Feeds</span></div><div class="component-desc">Real-time ground truth from OT.</div><span class="tooltip"><strong>Why:</strong> Provides the system with what *is actually* happening. Essential for detecting deviations from the plan and reacting in real-time.</span></div>
+            </div>
+            <!-- Stage 2 -->
+            <div class="stage" id="stage-2">
+                <h3 class="stage-title">2. Event Distribution</h3>
+                <div id="bus" class="component bus"><div class="component-header"><i class="fas fa-project-diagram"></i><span class="component-title">Event Bus</span></div><div class="component-desc">Distributes real-time events.</div><span class="tooltip"><strong>Why:</strong> Decouples all components. A model can be updated or fail without affecting others. This is the foundation for a scalable and resilient microservice architecture.</span></div>
+            </div>
+            <!-- Stage 3 -->
+            <div class="stage" id="stage-3">
+                 <h3 class="stage-title">3. Prediction</h3>
+                 <div id="modelA" class="component model"><div class="component-header"><i class="fas fa-clock"></i><span class="component-title">A: Gate Turnaround</span></div><span class="tooltip"><strong>Expertise:</strong> Predicts when a gate will be free.</span></div>
+                 <div id="modelB" class="component model"><div class="component-header"><i class="fas fa-users"></i><span class="component-title">B: Congestion</span></div><span class="tooltip"><strong>Expertise:</strong> Forecasts passenger density in different zones.</span></div>
+                 <div id="modelC" class="component model"><div class="component-header"><i class="fas fa-suitcase-rolling"></i><span class="component-title">C: Baggage Transfer</span></div><span class="tooltip"><strong>Expertise:</strong> Predicts time to move baggage between points.</span></div>
+                 <div id="modelD" class="component model"><div class="component-header"><i class="fas fa-tools"></i><span class="component-title">D: Asset Failure</span></div><span class="tooltip"><strong>Expertise:</strong> Predicts the probability of equipment failure (e.g., jet bridge).</span></div>
+                 <div id="modelE" class="component model"><div class="component-header"><i class="fas fa-hard-hat"></i><span class="component-title">E: Workforce Safety</span></div><span class="tooltip"><strong>Expertise:</strong> Predicts injury risk for ground crews.</span></div>
+            </div>
+            <!-- Stage 4 -->
+            <div class="stage" id="stage-4">
+                 <h3 class="stage-title">4. Optimization</h3>
+                 <div id="engine" class="component engine"><div class="component-header"><i class="fas fa-brain"></i><span class="component-title">Core Optimization Engine</span></div><div class="component-desc">Finds the best decision by simulating outcomes.</div><span class="tooltip"><strong>Why:</strong> This is the decision-maker. It synthesizes predictions from multiple expert models into a single, globally optimized decision, balancing conflicting objectives like speed vs. cost vs. safety.</span></div>
+            </div>
+            <!-- Stage 5 -->
+            <div class="stage" id="stage-5">
+                 <h3 class="stage-title">5. Human Interface</h3>
+                 <div id="hmi" class="component hmi">
+                     <div class="component-header"><i class="fas fa-tv"></i><span class="component-title">Presentation Layer</span></div>
+                     <div class="component-desc">Translates decision into trusted, actionable insight. <br><b>Net Benefit: ~$10,500</b></div>
+                     <div class="hmi-actions" id="hmi-actions">
+                         <button class="hmi-accept" id="accept-btn"><i class="fas fa-check"></i> Accept Suggestion</button>
+                         <button class="hmi-override" id="override-btn"><i class="fas fa-edit"></i> Override</button>
+                     </div>
+                     <span class="tooltip"><strong>Why:</strong> A raw decision ("Gate C12") is useless without context. This layer builds trust by explaining the "why" behind the recommendation, including reasons and trade-offs.</span>
+                 </div>
+            </div>
+            <!-- Stage 6 -->
+            <div class="stage" id="stage-6">
+                 <h3 class="stage-title">6. The Feedback Loop</h3>
+                 <div id="feedback-store" class="component feedback">
+                    <div class="component-header"><i class="fas fa-comments"></i><span class="component-title">Feedback & Analytics Store</span></div>
+                    <div id="feedback-desc" class="component-desc">Captures the final decision and outcome for analysis.</div>
+                    <span class="tooltip" id="feedback-tooltip"><strong>Why:</strong> This is the most valuable dataset you can create. It captures the difference between the AI's suggestion and the human expert's final decision, providing labeled data for future retraining.</span>
+                 </div>
+            </div>
+        </main>
+        
+        <div id="mlops-pipeline" class="component training">
+            <div class="component-header"><i class="fas fa-sync-alt"></i><span class="component-title">MLOps: Continuous Training & Validation Pipeline</span></div>
+            <div class="component-desc">The "learning" part of the system. New, improved models are trained on the feedback data, validated offline in a simulator, and then safely redeployed to production, ensuring the system gets smarter over time.</div>
+        </div>
+
+        <svg id="svg-canvas"></svg>
+    </div>
+    
+    <footer class="explanation">
+        <h2>Architectural Rationale: The 'Why' Behind the Design</h2>
+        <p>This architecture is designed for scalability, resilience, and continuous improvement, moving beyond a single model to a comprehensive decision-support ecosystem.</p>
+        <p><strong>Why an Event Bus?</strong> A central event bus (like Kafka) decouples every component. The "Gate Turnaround" model can be retrained and redeployed without affecting the "Passenger Congestion" model. This allows for independent development and prevents a single point of failure.</p>
+        <p><strong>Why Microservices for Models?</strong> Each model is a specialized expert. Deploying them as separate microservices allows each to be scaled, managed, and updated independently according to its specific needs. Model A might need GPU resources, while Model C is CPU-bound; this architecture supports that flexibility.</p>
+        <p><strong>Why a Feedback Loop?</strong> A model deployed today will be wrong tomorrow. The world changes. Capturing the operator's final decision—especially when it differs from the AI's recommendation—is the **only way to create a self-improving system**. This feedback data is the fuel for analysis and retraining, ensuring the system adapts and becomes more valuable over time. It's the key difference between a static tool and a learning partner.</p>
+    </footer>
+
+    <script>
+    // JS to follow...
+    </script>
+</body>
+</html>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const svg = document.getElementById('svg-canvas');
+        const container = document.querySelector('.architecture-container');
+        const button = document.getElementById('run-button');
+        const hmiActions = document.getElementById('hmi-actions');
+        const acceptBtn = document.getElementById('accept-btn');
+        const overrideBtn = document.getElementById('override-btn');
+        const feedbackDesc = document.getElementById('feedback-desc');
+        const feedbackTooltip = document.getElementById('feedback-tooltip');
+
+        const getElEdge = (id, side) => {
+            const el = document.getElementById(id);
+            const rect = el.getBoundingClientRect();
+            const contRect = container.getBoundingClientRect();
+            const x = rect.left - contRect.left;
+            const y = rect.top - contRect.top;
+            if (side === 'left') return { x: x, y: y + rect.height / 2 };
+            if (side === 'right') return { x: x + rect.width, y: y + rect.height / 2 };
+            if (side === 'top') return { x: x + rect.width / 2, y: y };
+            if (side === 'bottom') return { x: x + rect.width / 2, y: y + rect.height };
+            return {x:0, y:0};
+        };
+
+        function drawConnections() {
+            svg.innerHTML = '';
+            const defs = `<defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="${getComputedStyle(document.documentElement).getPropertyValue('--color-arrow')}" /></marker>
+                <marker id="arrowhead-highlight" markerWidth="10" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="${getComputedStyle(document.documentElement).getPropertyValue('--color-highlight')}" /></marker>
+            </defs>`;
+            svg.insertAdjacentHTML('beforeend', defs);
+
+            const connections = [
+                { from: 'source1', to: 'bus', side: ['right', 'left'], id: 'flow1a' },
+                { from: 'source2', to: 'bus', side: ['right', 'left'], id: 'flow1b' },
+                { from: 'bus', to: 'modelA', side: ['right', 'left'], id: 'flow2a' }, { from: 'bus', to: 'modelB', side: ['right', 'left'], id: 'flow2b' },
+                { from: 'bus', to: 'modelC', side: ['right', 'left'], id: 'flow2c' }, { from: 'bus', to: 'modelD', side: ['right', 'left'], id: 'flow2d' },
+                { from: 'bus', to: 'modelE', side: ['right', 'left'], id: 'flow2e' },
+                { from: 'modelA', to: 'engine', side: ['right', 'left'], id: 'flow3a' }, { from: 'modelB', to: 'engine', side: ['right', 'left'], id: 'flow3b' },
+                { from: 'modelC', to: 'engine', side: ['right', 'left'], id: 'flow3c' }, { from: 'modelD', to: 'engine', side: ['right', 'left'], id: 'flow3d' },
+                { from: 'modelE', to: 'engine', side: ['right', 'left'], id: 'flow3e' },
+                { from: 'engine', to: 'hmi', side: ['right', 'left'], id: 'flow4a' },
+                { from: 'hmi', to: 'feedback-store', side: ['right', 'left'], id: 'flow5a' },
+                { from: 'feedback-store', to: 'mlops-pipeline', side: ['top', 'right'], id: 'flow6a' },
+                { from: 'mlops-pipeline', to: 'modelA', side: ['left', 'top'], id: 'flow7a' },
+            ];
+
+            connections.forEach(conn => {
+                const from = getElEdge(conn.from, conn.side[0]);
+                const to = getElEdge(conn.to, conn.side[1]);
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const c1x = from.x + (to.x - from.x) * (conn.from === 'mlops-pipeline' ? 0 : 0.5);
+                const c1y = from.y + (to.y - from.y) * (conn.from === 'mlops-pipeline' ? 0.9 : 0);
+                const c2x = to.x - (to.x - from.x) * (conn.to === 'mlops-pipeline' ? 0.9 : 0.5);
+                const c2y = to.y - (to.y - from.y) * (conn.to === 'mlops-pipeline' ? 0 : 0);
+                const pathD = `M ${from.x} ${from.y} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${to.x} ${to.y}`;
+                
+                path.setAttribute('d', pathD);
+                path.setAttribute('class', 'flow-path');
+                path.setAttribute('id', conn.id);
+                path.setAttribute('marker-end', 'url(#arrowhead)');
+                svg.appendChild(path);
+            });
+        }
+
+        drawConnections();
+        window.addEventListener('resize', drawConnections);
+
+        const animationSteps = [
+            { comp: ['source1', 'source2'], flow: ['flow1a', 'flow1b'], stage: 'stage-1'},
+            { comp: ['bus'], flow: ['flow2a', 'flow2b', 'flow2c', 'flow2d', 'flow2e'], stage: 'stage-2'},
+            { comp: ['modelA', 'modelB', 'modelC', 'modelD', 'modelE'], flow: ['flow3a', 'flow3b', 'flow3c', 'flow3d', 'flow3e'], stage: 'stage-3'},
+            { comp: ['engine'], flow: ['flow4a'], stage: 'stage-4'},
+            { comp: ['hmi'], flow: [], stage: 'stage-5'}
+        ];
+
+        function highlight(ids, className) { ids.forEach(id => document.getElementById(id)?.classList.add(className)); }
+        function unhighlightAll() {
+            document.querySelectorAll('.highlight-component, .highlight-flow').forEach(el => {
+                el.classList.remove('highlight-component', 'highlight-flow');
+                if (el.tagName === 'path') el.setAttribute('marker-end', 'url(#arrowhead)');
+            });
+        }
+
+        function runFeedbackAnimation(accepted) {
+            hmiActions.style.display = 'none';
+            if (accepted) {
+                feedbackDesc.innerHTML = "<b>Action:</b> Suggestion Accepted.<br><b>Data Captured:</b> AI Rec = 'Gate C12', User Action = 'Gate C12'.";
+                feedbackTooltip.innerHTML = "<strong>Why:</strong> Capturing accepted recommendations confirms the model is providing value and reinforces correct behavior during retraining.";
+            } else {
+                feedbackDesc.innerHTML = "<b>Action:</b> Override.<br><b>Data Captured:</b> AI Rec = 'Gate C12', User Action = 'Gate D10', Reason = 'Closer to connecting flight'.";
+                feedbackTooltip.innerHTML = "<strong>Why:</strong> Capturing overrides is CRITICAL. This is a high-value, human-labeled data point showing where the model's understanding is incomplete. This is the primary fuel for improvement.";
+            }
+
+            let cumulativeDelay = 0;
+            const stepDuration = 1500;
+            const feedbackSteps = [
+                { comp: ['feedback-store'], flow: ['flow5a'], stage: 'stage-6' },
+                { comp: ['mlops-pipeline'], flow: ['flow6a', 'flow7a'], stage: 'stage-6' }
+            ];
+
+            feedbackSteps.forEach((step, index) => {
+                 setTimeout(() => {
+                    unhighlightAll();
+                    highlight(step.comp, 'highlight-component');
+                    highlight(step.flow, 'highlight-flow');
+                    if(step.stage) highlight([step.stage + ' > .stage-title'], 'highlight-flow');
+                    step.flow.forEach(id => document.getElementById(id)?.setAttribute('marker-end', 'url(#arrowhead-highlight)'));
+
+                    if (index === feedbackSteps.length - 1) {
+                        setTimeout(() => {
+                            unhighlightAll(); button.disabled = false;
+                            button.innerHTML = '<i class="fas fa-redo"></i> Animate Again';
+                        }, stepDuration);
+                    }
+                }, cumulativeDelay);
+                cumulativeDelay += stepDuration;
+            });
+        }
+
+        function runAnimation() {
+            button.disabled = true; unhighlightAll(); hmiActions.style.display = 'none';
+            let cumulativeDelay = 0; const stepDuration = 1200;
+            animationSteps.forEach((step, index) => {
+                setTimeout(() => {
+                    unhighlightAll();
+                    highlight(step.comp, 'highlight-component');
+                    highlight(step.flow, 'highlight-flow');
+                    if (step.stage) highlight([step.stage + ' > .stage-title'], 'highlight-flow');
+                    step.flow.forEach(id => document.getElementById(id)?.setAttribute('marker-end', 'url(#arrowhead-highlight)'));
+                    
+                    if (step.comp.includes('hmi')) {
+                        hmiActions.style.display = 'flex';
+                    }
+                }, cumulativeDelay);
+                cumulativeDelay += stepDuration;
+            });
+        }
+        
+        button.addEventListener('click', runAnimation);
+        acceptBtn.addEventListener('click', () => runFeedbackAnimation(true));
+        overrideBtn.addEventListener('click', () => runFeedbackAnimation(false));
+    });
+</script>
